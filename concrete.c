@@ -5,6 +5,9 @@
 #include <unistd.h>
 #include <errno.h>
 
+/* define */
+#define CTRL_KEY(k) ((k) & 0x1f)
+
 struct termios orig_termios;
 
 /* terminal settings */
@@ -58,7 +61,7 @@ int main() {
             printf("%d ('%c')\r\n", c, c);
         }
 
-        if(c == 'q') break;
+        if(c == CTRL_KEY('q')) break;
     }
 
     return 0;

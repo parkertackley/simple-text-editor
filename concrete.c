@@ -8,7 +8,11 @@
 /* define */
 #define CTRL_KEY(k) ((k) & 0x1f)
 
-struct termios orig_termios;
+struct editorConfig {
+    struct termios orig_termios;
+};
+
+struct editorConfig E;
 
 /* terminal settings */
 
@@ -23,7 +27,7 @@ void die(const char *s) {
 
 // save original terminal attributes to restore at exit
 void disableRawMode() {
-    if(tcsetattr(STDERR_FILENO, TCSAFLUSH, &orig_termios) == -1) {
+    if(tcsetattr(STDERR_FILENO, TCSAFLUSH, &E.orig_termios) == -1) {
         die("tcsetattr");
     }
 }
@@ -32,10 +36,10 @@ void disableRawMode() {
 // echoing - displays what is being typed, canonical - reads line by line rather than bytes by byte
 // terminal enters raw mode
 void enableRawMode() {
-    if(tcgetattr(STDIN_FILENO, &orig_termios) == -1) die("tcgetattr");
+    if(tcgetattr(STDIN_FILENO, &E.orig_termios) == -1) die("tcgetattr");
     atexit(disableRawMode);
 
-    struct termios raw = orig_termios;
+    struct termios raw = E.orig_termios;
 
     raw.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON); /* break condition(ctrl+c) | ctrl+m | parity checking | 8-bit set to 0 turned off | ctrl+s, ctrl+q*/
     raw.c_oflag &= ~(OPOST);

@@ -4,11 +4,14 @@
 #include <termios.h>
 #include <unistd.h>
 #include <errno.h>
+#include <sys/ioctl.h>
 
 /* define */
 #define CTRL_KEY(k) ((k) & 0x1f)
 
 struct editorConfig {
+    int screenRows;
+    int screenCols;
     struct termios orig_termios;
 };
 
@@ -64,10 +67,25 @@ int editorReadKey() {
 
 }
 
+int getwindowSize(int *rows, int *cols) {
+
+    struct winsize ws;
+
+    if(ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == -1 || ws.ws_col == 0) {
+        return -1;
+    } else {
+        *cols = ws.ws_col;
+        printf("balls");
+        *rows = ws.ws_row;
+        return 0;
+    }
+
+}
+
 /* output */
 
 void editorDrawRows() {
-    for(int y = 0; y < 24; y++) {
+    for(int y = 0; y < E.screenRows; y++) {
         write(STDOUT_FILENO, "~\r\n", 3);
     }
 }
@@ -98,8 +116,13 @@ void editorProcessInput() {
 
 /* init */
 
+void initEditor() {
+    if(getwindowSize(&E.screenRows, &E.screenCols) == -1) die("getWindowSize");
+}
+
 int main() {
     enableRawMode();
+    initEditor();
 
     while(1) {
         editorRefreshScreen();

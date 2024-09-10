@@ -8,6 +8,7 @@
 #include <string.h>
 
 /* define */
+#define CONCRETE_VERSION "0.0.1"
 #define CTRL_KEY(k) ((k) & 0x1f)
 
 struct editorConfig {
@@ -75,7 +76,6 @@ int getwindowSize(int *rows, int *cols) {
         return -1;
     } else {
         *cols = ws.ws_col;
-        printf("balls");
         *rows = ws.ws_row;
         return 0;
     }
@@ -108,8 +108,24 @@ void abFree(struct abuf *ab) {
 
 void editorDrawRows(struct abuf *ab) {
     for(int y = 0; y < E.screenRows; y++) {
-        abAppend(ab, "~", 1);
+        if( y == E.screenRows / 3) {
+            char welcome[80];
+            int welcomelen = snprintf(welcome, sizeof(welcome), "Concrete Editor -- verzion %s", CONCRETE_VERSION);
+            if(welcomelen > E.screenCols) welcomelen = E.screenCols;
 
+            int padding = (E.screenCols - welcomelen) / 2;
+            if(padding) {
+                abAppend(ab, "~", 1);
+                padding--;
+            }
+            while(padding--) abAppend(ab, " ", 1);
+
+            abAppend(ab, welcome, welcomelen);
+        } else {
+            abAppend(ab, "~", 1);
+        }
+
+        abAppend(ab, "\x1b[K", 3);
         if(y < E.screenRows - 1) abAppend(ab, "\r\n", 2);
 
     }
@@ -118,12 +134,13 @@ void editorDrawRows(struct abuf *ab) {
 void editorRefreshScreen() {
     struct abuf ab = ABUF_INIT;
 
-    abAppend(&ab, "\x1b[2J", 4);
+    abAppend(&ab, "\x1b[?25l", 6);
     abAppend(&ab, "\x1b[H", 3);
 
     editorDrawRows(&ab);
 
     abAppend(&ab, "\x1b[H", 3);
+    abAppend(&ab, "\x1b[?25h", 6);
 
     write(STDOUT_FILENO, ab.b, ab.len);
     abFree(&ab);
